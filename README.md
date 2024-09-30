@@ -1,16 +1,3 @@
-```
-Replace the next texts with the proper values:
-
-tinchoz49/typebox-env
-typebox-env
-Martin Acosta
-tinchoz49@gmail.com
-2024
-Validate and Parse your env variables with TypeBox
-```
-
-![Validate and Parse your env variables with TypeBox](.github/assets/logo.png 'Validate and Parse your env variables with TypeBox')
-
 # typebox-env
 
 > Validate and Parse your env variables with TypeBox
@@ -22,15 +9,57 @@ Validate and Parse your env variables with TypeBox
 ## Install
 
 ```bash
-$ npm install typebox-env
+$ npm install typebox-env @sinclair/typebox
 ```
 
 ## Usage
 
 ```js
-import { hello } from 'typebox-env'
+import { Type } from '@sinclair/typebox'
+import { JSON, parseEnv, SplitArray } from 'typebox-env'
 
-hello()
+const schema = Type.Object({
+  FOO_BAR: SplitArray(Type.Array(Type.String())),
+  BAZ: Type.String(),
+  JSON: JSON(Type.Object({
+    foo: Type.String(),
+    bar: Type.String(),
+  })),
+  DEEP: Type.Object({
+    NESTED: Type.Object({
+      FOO: Type.String(),
+    }),
+    BAR: Type.String(),
+  }),
+})
+
+const env = {
+  FOO_BAR: 'a,b,c',
+  BAZ: 'qux',
+  JSON: '{"foo":"bar","bar":"baz"}',
+  DEEP_NESTED_FOO: 'qux',
+  DEEP_BAR: 'baz',
+}
+
+const result = parseEnv(schema, env)
+
+console.log(result)
+/*
+{
+  FOO_BAR: ['a', 'b', 'c'],
+  BAZ: 'qux',
+  JSON: {
+    foo: 'bar',
+    bar: 'baz',
+  },
+  DEEP: {
+    NESTED: {
+      FOO: 'qux',
+    },
+    BAR: 'baz',
+  },
+}
+*/
 ```
 
 ## Issues

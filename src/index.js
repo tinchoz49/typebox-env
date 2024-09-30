@@ -11,13 +11,18 @@ import { dset } from 'dset'
 export const JSON = (schema) => {
   return Type.Transform(schema)
     .Decode((value) => {
-      return globalThis.JSON.stringify(value)
+      try {
+        return globalThis.JSON.stringify(value)
+      } catch (error) {
+        return '{}'
+      }
     })
     .Encode((value) => {
-      if (typeof value === 'string') {
+      try {
         return globalThis.JSON.parse(value)
+      } catch (error) {
+        return value
       }
-      return value
     })
 }
 
@@ -36,19 +41,19 @@ export const SplitArray = (schema, delimiter = ',') => {
       if (Array.isArray(value)) {
         return value.join(delimiter)
       }
-      if (typeof value === 'string') {
-        return value
-      }
-      return ''
+
+      return []
     })
     .Encode((value) => {
       if (Array.isArray(value)) {
         return value
       }
+
       if (typeof value === 'string') {
         return value.split(delimiter)
       }
-      return []
+
+      return value
     })
 }
 
