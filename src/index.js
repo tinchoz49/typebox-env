@@ -1,15 +1,16 @@
-/** @import { TSchema, TObject, TString, TArray, Static } from '@sinclair/typebox' */
+/** @import { TSchema, TProperties, ObjectOptions, ArrayOptions, Static } from '@sinclair/typebox' */
 
 import { Type, TypeGuard } from '@sinclair/typebox'
 import { HasTransform, Value } from '@sinclair/typebox/value'
 import { dset } from 'dset'
 
 /**
- * @template {TObject} T
- * @param {T} schema
+ * @template {TProperties} T
+ * @param {T} properties
+ * @param {ObjectOptions} [options]
  */
-export const JSON = (schema) => {
-  return Type.Transform(schema)
+export const JSON = (properties, options) => {
+  return Type.Transform(Type.Object(properties, options))
     .Decode((value) => {
       try {
         return globalThis.JSON.stringify(value)
@@ -27,16 +28,14 @@ export const JSON = (schema) => {
 }
 
 /**
- * @template {TArray<TString>} T
+ * @template {TSchema} T
  * @param {T} schema
- * @param {string} delimiter
+ * @param {ArrayOptions & { delimiter?: string }} [options]
  */
-export const SplitArray = (schema, delimiter = ',') => {
-  if (!(TypeGuard.IsArray(schema))) {
-    throw new Error('SplitArray can only be used on arrays')
-  }
+export const SplitArray = (schema, options = {}) => {
+  const { delimiter = ',', ...arrayOptions } = options
 
-  return Type.Transform(schema)
+  return Type.Transform(Type.Array(schema, arrayOptions))
     .Decode((value) => {
       if (Array.isArray(value)) {
         return value.join(delimiter)

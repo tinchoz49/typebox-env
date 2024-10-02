@@ -14,17 +14,17 @@ $ npm install typebox-env @sinclair/typebox
 
 ## Usage
 
-```js
+```ts
 import { Type } from '@sinclair/typebox'
 import { JSON, parseEnv, SplitArray } from 'typebox-env'
 
 const schema = Type.Object({
-  FOO_BAR: SplitArray(Type.Array(Type.String())),
+  FOO_BAR: SplitArray(Type.String()),
   BAZ: Type.String(),
-  JSON: JSON(Type.Object({
+  JSON: JSON({
     foo: Type.String(),
     bar: Type.String(),
-  })),
+  }),
   DEEP: Type.Object({
     NESTED: Type.Object({
       FOO: Type.String(),

@@ -8,12 +8,12 @@ import { JSON, parseEnv, SplitArray } from '../src/index.js'
 describe('parseEnv', () => {
   it('should work', () => {
     const schema = Type.Object({
-      FOO_BAR: SplitArray(Type.Array(Type.String())),
+      FOO_BAR: SplitArray(Type.String()),
       BAZ: Type.String(),
-      JSON: JSON(Type.Object({
+      JSON: JSON({
         foo: Type.String(),
         bar: Type.String(),
-      })),
+      }),
       DEEP: Type.Object({
         NESTED: Type.Object({
           FOO: Type.String(),
@@ -31,6 +31,7 @@ describe('parseEnv', () => {
     }
 
     const result = parseEnv(schema, env)
+
     assert.deepEqual(result, {
       FOO_BAR: ['a', 'b', 'c'],
       BAZ: 'qux',
