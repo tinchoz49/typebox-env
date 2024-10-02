@@ -1,6 +1,6 @@
 # typebox-env
 
-> Validate and Parse your env variables with TypeBox
+> Validate and Parse your environment variables with TypeBox.
 
 ![Tests](https://github.com/tinchoz49/typebox-env/actions/workflows/test.yml/badge.svg)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard--ext-05ae89.svg)](https://github.com/tinchoz49/eslint-config-standard-ext)
