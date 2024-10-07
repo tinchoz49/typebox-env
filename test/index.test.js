@@ -47,4 +47,19 @@ describe('parseEnv', () => {
       },
     })
   })
+
+  it('should fail when JSON.parse fails', () => {
+    const schema = Type.Object({
+      JSON: JSON({
+        foo: Type.String(),
+        bar: Type.String(),
+      }),
+    })
+
+    const env = {
+      JSON: '{"foo":"bar","bar":"baz"',
+    }
+
+    assert.throws(() => parseEnv(schema, env))
+  })
 })

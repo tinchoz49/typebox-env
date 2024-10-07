@@ -22,7 +22,7 @@ export const JSON = (properties, options) => {
       try {
         return globalThis.JSON.parse(value)
       } catch (error) {
-        return value
+        return {}
       }
     })
 }
