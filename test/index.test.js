@@ -10,10 +10,10 @@ describe('parseEnv', () => {
     const schema = Type.Object({
       FOO_BAR: SplitArray(Type.String()),
       BAZ: Type.String(),
-      JSON: JSON({
+      JSON: JSON(Type.Object({
         foo: Type.String(),
         bar: Type.String(),
-      }),
+      })),
       DEEP: Type.Object({
         NESTED: Type.Object({
           FOO: Type.String(),
@@ -50,10 +50,10 @@ describe('parseEnv', () => {
 
   it('should fail when JSON.parse fails', () => {
     const schema = Type.Object({
-      JSON: JSON({
+      JSON: JSON(Type.Object({
         foo: Type.String(),
         bar: Type.String(),
-      }),
+      })),
     })
 
     const env = {

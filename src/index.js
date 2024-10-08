@@ -1,16 +1,15 @@
-/** @import { TSchema, TProperties, ObjectOptions, ArrayOptions, Static } from '@sinclair/typebox' */
+/** @import { TSchema, ArrayOptions, Static } from '@sinclair/typebox' */
 
 import { Type, TypeGuard } from '@sinclair/typebox'
 import { HasTransform, Value } from '@sinclair/typebox/value'
 import { dset } from 'dset'
 
 /**
- * @template {TProperties} T
- * @param {T} properties
- * @param {ObjectOptions} [options]
+ * @template {TSchema} T
+ * @param {T} schema
  */
-export const JSON = (properties, options) => {
-  return Type.Transform(Type.Object(properties, options))
+export const JSON = (schema) => {
+  return Type.Transform(schema)
     .Decode((value) => {
       try {
         return globalThis.JSON.stringify(value)
@@ -19,10 +18,22 @@ export const JSON = (properties, options) => {
       }
     })
     .Encode((value) => {
+      if (typeof value !== 'string') {
+        return value
+      }
+
       try {
         return globalThis.JSON.parse(value)
       } catch (error) {
-        return {}
+        if (TypeGuard.IsObject(schema) || TypeGuard.IsRecord(schema)) {
+          return {}
+        }
+
+        if (TypeGuard.IsArray(schema)) {
+          return []
+        }
+
+        return null
       }
     })
 }
