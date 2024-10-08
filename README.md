@@ -21,10 +21,10 @@ import { JSON, parseEnv, SplitArray } from 'typebox-env'
 const schema = Type.Object({
   FOO_BAR: SplitArray(Type.String()),
   BAZ: Type.String(),
-  JSON: JSON({
+  JSON: JSON(Type.Object({
     foo: Type.String(),
     bar: Type.String(),
-  }),
+  })),
   DEEP: Type.Object({
     NESTED: Type.Object({
       FOO: Type.String(),
