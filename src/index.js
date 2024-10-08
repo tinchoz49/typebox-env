@@ -1,6 +1,6 @@
 /** @import { TSchema, ArrayOptions, Static } from '@sinclair/typebox' */
 
-import { Type, TypeGuard } from '@sinclair/typebox'
+import { CloneType, Type, TypeGuard } from '@sinclair/typebox'
 import { HasTransform, Value } from '@sinclair/typebox/value'
 import { dset } from 'dset'
 
@@ -9,7 +9,7 @@ import { dset } from 'dset'
  * @param {T} schema
  */
 export const JSON = (schema) => {
-  return Type.Transform(schema)
+  return Type.Transform(CloneType(schema, { $json: true }))
     .Decode((value) => {
       try {
         return globalThis.JSON.stringify(value)
@@ -78,29 +78,39 @@ export function parseEnv(schema, env) {
 
   /**
    * @param {TSchema} schema
-   * @param {string[]} [parentPrefix]
+   * @param {string[]} prefix
+   * @param {string} envKey
    */
-  function addPrefixes(schema, parentPrefix = []) {
-    Object.entries(schema.properties).forEach(([key, value]) => {
-      const currentPrefix = parentPrefix ? [...parentPrefix, key] : [key]
-      const envKey = currentPrefix.join('_')
-      if (TypeGuard.IsObject(value)) {
-        addPrefixes(value, currentPrefix)
-      } else if (TypeGuard.IsUnion(value)) {
-        value.anyOf.forEach((item) => {
-          if (TypeGuard.IsObject(item)) {
-            addPrefixes(/** @type {TSchema} */ (item), currentPrefix)
-          } else if (envKey in env) {
-            dset(prefixedEnv, currentPrefix.join('.'), env[envKey])
-          }
-        })
-      } else if (envKey in env) {
-        dset(prefixedEnv, currentPrefix.join('.'), env[envKey])
-      }
-    })
+  function addPrefixes(schema, prefix = [], envKey) {
+    if (TypeGuard.IsObject(schema) && !schema.$json) {
+      Object.entries(schema.properties).forEach(([key, value]) => {
+        const nextPrefix = [...prefix, key]
+        const envKey = nextPrefix.join('_')
+        addPrefixes(value, nextPrefix, envKey)
+      })
+      return
+    }
+
+    if (TypeGuard.IsUnion(schema)) {
+      schema.anyOf.forEach((item) => {
+        addPrefixes(item, prefix, envKey)
+      })
+      return
+    }
+
+    if (TypeGuard.IsIntersect(schema)) {
+      schema.allOf.forEach((item) => {
+        addPrefixes(item, prefix, envKey)
+      })
+      return
+    }
+
+    if (envKey in env) {
+      dset(prefixedEnv, prefix.join('.'), env[envKey])
+    }
   }
 
-  addPrefixes(schema)
+  addPrefixes(schema, [], '')
 
   let result = HasTransform(schema, []) ? Value.Encode(schema, prefixedEnv) : prefixedEnv
   result = Value.Default(schema, result)
