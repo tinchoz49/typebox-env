@@ -109,3 +109,28 @@ export function parseEnv(schema, env) {
   Value.Assert(schema, result)
   return result
 }
+
+/**
+ * @template T
+ * @export
+ * @typedef {Array<DeepPartial<T>>} DeepPartialArray
+ */
+
+/**
+ * @template T
+ * @export
+ * @typedef {{ [K in keyof T]?: DeepPartial<T[K]> }} DeepPartialObject
+ */
+
+/**
+ * Makes all properties in T optional recursively
+ * @template T - The type to make partially optional
+ * @typedef {T extends Function
+ * ? T
+ * : T extends Array<infer InferredArrayMember>
+ * ? DeepPartialArray<InferredArrayMember>
+ * : T extends object
+ * ? DeepPartialObject<T>
+ * : T | undefined
+ * } DeepPartial
+ */
