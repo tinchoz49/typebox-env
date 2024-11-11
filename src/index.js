@@ -131,7 +131,6 @@ export function parseEnv(schema, env) {
   }
 
   addPrefixes(schema, [], '')
-  console.log(prefixedEnv)
   let result = HasTransform(schema, []) ? Value.Encode(schema, prefixedEnv) : prefixedEnv
   result = Value.Default(schema, result)
   result = Value.Clean(schema, result)
