@@ -2,7 +2,27 @@
 
 import { CloneType, Type, TypeGuard } from '@sinclair/typebox'
 import { HasTransform, Value } from '@sinclair/typebox/value'
-import { dset } from 'dset'
+
+// @ts-ignore
+function dset(obj, keys, val) {
+  keys.split && (keys = keys.split('.'))
+  let i = 0
+  const l = keys.length
+  let t = obj
+  let x
+  let k
+  while (i < l) {
+    k = '' + keys[i++]
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') break
+    if (i === l) {
+      if (!(k in t)) {
+        t = t[k] = val
+      }
+    } else {
+      t = t[k] = (typeof (x = t[k]) === typeof (keys)) ? x : (keys[i] * 0 !== 0 || !!~('' + keys[i]).indexOf('.')) ? {} : []
+    }
+  }
+}
 
 /**
  * @template {TSchema} T
@@ -111,7 +131,7 @@ export function parseEnv(schema, env) {
   }
 
   addPrefixes(schema, [], '')
-
+  console.log(prefixedEnv)
   let result = HasTransform(schema, []) ? Value.Encode(schema, prefixedEnv) : prefixedEnv
   result = Value.Default(schema, result)
   result = Value.Clean(schema, result)

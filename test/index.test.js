@@ -40,7 +40,6 @@ describe('parseEnv', () => {
     }
 
     const result = parseEnv(schema, env)
-
     assert.deepEqual(result, {
       FOO_BAR: ['a', 'b', 'c'],
       BAZ: 'qux',
