@@ -1,28 +1,8 @@
 /** @import { TSchema, ArrayOptions, Static } from '@sinclair/typebox' */
 
 import { CloneType, Type, TypeGuard } from '@sinclair/typebox'
-import { HasTransform, Value } from '@sinclair/typebox/value'
-
-// @ts-ignore
-function dset(obj, keys, val) {
-  keys.split && (keys = keys.split('.'))
-  let i = 0
-  const l = keys.length
-  let t = obj
-  let x
-  let k
-  while (i < l) {
-    k = '' + keys[i++]
-    if (k === '__proto__' || k === 'constructor' || k === 'prototype') break
-    if (i === l) {
-      if (!(k in t)) {
-        t = t[k] = val
-      }
-    } else {
-      t = t[k] = (typeof (x = t[k]) === typeof (keys)) ? x : (keys[i] * 0 !== 0 || !!~('' + keys[i]).indexOf('.')) ? {} : []
-    }
-  }
-}
+import { Value } from '@sinclair/typebox/value'
+import { dset } from 'dset'
 
 /**
  * @template {TSchema} T
@@ -66,7 +46,7 @@ export const JSON = (schema) => {
 export const SplitArray = (schema, options = {}) => {
   const { delimiter = ',', ...arrayOptions } = options
 
-  return Type.Transform(Type.Array(schema, arrayOptions))
+  return Type.Transform(Type.Array(schema, { ...arrayOptions, $split: true }))
     .Decode((value) => {
       if (Array.isArray(value)) {
         return value.join(delimiter)
@@ -109,6 +89,14 @@ export function parseEnv(schema, env) {
         addPrefixes(value, nextPrefix, envKey)
       })
       return
+    } else if (schema.$json) {
+      dset(prefixedEnv, prefix.join('.'), Value.Encode(schema, env[envKey]))
+      return
+    }
+
+    if (schema.$split) {
+      dset(prefixedEnv, prefix.join('.'), Value.Encode(schema, env[envKey]))
+      return
     }
 
     if (TypeGuard.IsUnion(schema)) {
@@ -131,10 +119,9 @@ export function parseEnv(schema, env) {
   }
 
   addPrefixes(schema, [], '')
-  let result = Value.Convert(schema, prefixedEnv)
-  result = HasTransform(schema, []) ? Value.Encode(schema, result) : result
+  let result = Value.Default(schema, prefixedEnv)
   result = Value.Clean(schema, result)
-  result = Value.Default(schema, result)
+  result = Value.Convert(schema, result)
   Value.Assert(schema, result)
   return result
 }
