@@ -131,10 +131,10 @@ export function parseEnv(schema, env) {
   }
 
   addPrefixes(schema, [], '')
-  let result = HasTransform(schema, []) ? Value.Encode(schema, prefixedEnv) : prefixedEnv
-  result = Value.Default(schema, result)
+  let result = Value.Convert(schema, prefixedEnv)
+  result = HasTransform(schema, []) ? Value.Encode(schema, result) : result
   result = Value.Clean(schema, result)
-  result = Value.Convert(schema, result)
+  result = Value.Default(schema, result)
   Value.Assert(schema, result)
   return result
 }
