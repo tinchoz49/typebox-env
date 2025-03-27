@@ -9,7 +9,7 @@ describe('parseEnv', () => {
   it('should work', () => {
     const schema = Type.Object({
       NUM: Type.Number(),
-      FOO_BAR: SplitArray(Type.String()),
+      FOO_BAR: Type.Optional(SplitArray(Type.String())),
       BAZ: Type.Optional(Type.String()),
       JSON: JSON(Type.Object({
         foo: Type.String(),

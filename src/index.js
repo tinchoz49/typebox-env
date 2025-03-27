@@ -7,35 +7,35 @@ import { dset } from 'dset'
 /**
  * @template {TSchema} T
  * @param {T} schema
+ * @param {unknown} value
+ * @returns {unknown}
+ */
+function parseJSON(schema, value) {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  try {
+    return globalThis.JSON.parse(value)
+  } catch (error) {
+    if (TypeGuard.IsObject(schema) || TypeGuard.IsRecord(schema)) {
+      return {}
+    }
+
+    if (TypeGuard.IsArray(schema)) {
+      return []
+    }
+
+    return null
+  }
+}
+
+/**
+ * @template {TSchema} T
+ * @param {T} schema
  */
 export const JSON = (schema) => {
-  return Type.Transform(CloneType(schema, { $json: true }))
-    .Decode((value) => {
-      try {
-        return globalThis.JSON.stringify(value)
-      } catch (error) {
-        return '{}'
-      }
-    })
-    .Encode((value) => {
-      if (typeof value !== 'string') {
-        return value
-      }
-
-      try {
-        return globalThis.JSON.parse(value)
-      } catch (error) {
-        if (TypeGuard.IsObject(schema) || TypeGuard.IsRecord(schema)) {
-          return {}
-        }
-
-        if (TypeGuard.IsArray(schema)) {
-          return []
-        }
-
-        return null
-      }
-    })
+  return CloneType(schema, { $json: true })
 }
 
 /**
@@ -45,26 +45,7 @@ export const JSON = (schema) => {
  */
 export const SplitArray = (schema, options = {}) => {
   const { delimiter = ',', ...arrayOptions } = options
-
-  return Type.Transform(Type.Array(schema, { ...arrayOptions, $split: true }))
-    .Decode((value) => {
-      if (Array.isArray(value)) {
-        return value.join(delimiter)
-      }
-
-      return []
-    })
-    .Encode((value) => {
-      if (Array.isArray(value)) {
-        return value
-      }
-
-      if (typeof value === 'string') {
-        return value.split(delimiter)
-      }
-
-      return value
-    })
+  return Type.Array(schema, { ...arrayOptions, $split: delimiter })
 }
 
 /**
@@ -89,13 +70,18 @@ export function parseEnv(schema, env) {
         addPrefixes(value, nextPrefix, envKey)
       })
       return
-    } else if (schema.$json) {
-      dset(prefixedEnv, prefix.join('.'), Value.Encode(schema, env[envKey]))
+    } else if (schema.$json && envKey in env) {
+      const value = parseJSON(schema, env[envKey])
+      dset(prefixedEnv, prefix.join('.'), value)
       return
     }
 
-    if (schema.$split) {
-      dset(prefixedEnv, prefix.join('.'), Value.Encode(schema, env[envKey]))
+    if (schema.$split && envKey in env) {
+      let value = env[envKey]
+      if (typeof value === 'string') {
+        value = value.split(schema.$split)
+      }
+      dset(prefixedEnv, prefix.join('.'), value)
       return
     }
 
