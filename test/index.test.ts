@@ -36,8 +36,13 @@ describe('parseEnv', () => {
       FOO_BAR: 'a,b,c',
       BAZ: 'qux',
       JSON: '{"foo":"bar","bar":"baz"}',
+      DEEP: {
+        NESTED: {
+          FOO: 'qux2',
+        },
+        BAR: 'baz',
+      },
       DEEP_NESTED_FOO: 'qux',
-      DEEP_BAR: 'baz',
       UNION_FOO: 'a',
     }
 

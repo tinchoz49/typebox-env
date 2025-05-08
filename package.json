@@ -38,7 +38,7 @@
     "build:cjs": "tsc -p tsconfig.build.json --outDir dist/cjs --module CommonJS --moduleResolution Node10",
     "build:esm": "tsc -p tsconfig.build.json --outDir dist/esm",
     "build": "npm run build:clean && npm run build:cjs && npm run build:esm",
-    "test": "node --test --experimental-test-snapshots",
+    "test": "tsx --test --experimental-test-snapshots",
     "test:update": "npm run test -- --test-update-snapshots",
     "test:types": "tsc --noEmit",
     "posttest": "npm run lint",
@@ -55,6 +55,7 @@
     "eslint": "^9.11.1",
     "eslint-config-standard-ext": "^2.1.1",
     "rimraf": "^6.0.1",
-    "typescript": "^5.6.2"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }
