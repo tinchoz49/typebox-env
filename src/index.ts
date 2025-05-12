@@ -102,3 +102,21 @@ export function parseEnv<T extends TSchema>(schema: T, env: Record<string, unkno
   Value.Assert(schema, result)
   return result
 }
+
+type DeepPartialArray<T> = Array<DeepPartial<T>>
+
+type DeepPartialObject<T> = {
+  [K in keyof T]?: DeepPartial<T[K]>;
+}
+
+/**
+ * Makes all properties in T optional recursively
+ * @template T - The type to make partially optional
+ */
+export type DeepPartial<T> = T extends Function
+  ? T
+  : T extends Array<infer InferredArrayMember>
+    ? DeepPartialArray<InferredArrayMember>
+    : T extends object
+      ? DeepPartialObject<T>
+      : T | undefined
