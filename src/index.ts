@@ -1,8 +1,8 @@
-import type { ArrayOptions, Static, TSchema } from '@sinclair/typebox'
+import type { Static, TSchema } from 'typebox'
 
-import { CloneType, Type, TypeGuard } from '@sinclair/typebox'
-import { Value } from '@sinclair/typebox/value'
 import { dset } from 'dset'
+import { Type } from 'typebox'
+import { Value } from 'typebox/value'
 
 function flattenEnv<T extends Record<string, unknown>>(obj: T, prefix = ''): Record<string, unknown> {
   return Object.entries(obj).reduce<Record<string, unknown>>((acc, [key, value]) => {
@@ -26,11 +26,11 @@ function parseJSON<T extends TSchema>(schema: T, value: unknown): unknown {
   try {
     return globalThis.JSON.parse(value)
   } catch (error) {
-    if (TypeGuard.IsObject(schema) || TypeGuard.IsRecord(schema)) {
+    if (Type.IsObject(schema) || Type.IsRecord(schema)) {
       return {}
     }
 
-    if (TypeGuard.IsArray(schema)) {
+    if (Type.IsArray(schema)) {
       return []
     }
 
@@ -38,13 +38,13 @@ function parseJSON<T extends TSchema>(schema: T, value: unknown): unknown {
   }
 }
 
-export const JSON = <T extends TSchema>(schema: T) => {
-  return CloneType(schema, { $json: true })
+export const JSON = <T extends Type.TObject>(schema: T): T => {
+  return Type.Object(schema.properties, { $json: true, required: schema.required }) as T
 }
 
 export const SplitArray = <T extends TSchema>(
   schema: T,
-  options: ArrayOptions & { delimiter?: string } = {}
+  options: Type.TArrayOptions & { delimiter?: string } = {}
 ) => {
   const { delimiter = ',', ...arrayOptions } = options
   return Type.Array(schema, { ...arrayOptions, $split: delimiter })
@@ -54,36 +54,36 @@ export function parseEnv<T extends TSchema>(schema: T, env: Record<string, unkno
   const prefixedEnv = flattenEnv(Value.Clone(env))
 
   function addPrefixes(schema: TSchema, prefix: string[] = [], envKey: string): void {
-    if (TypeGuard.IsObject(schema) && !schema.$json) {
+    if (Type.IsObject(schema) && !('$json' in schema)) {
       Object.entries(schema.properties).forEach(([key, value]) => {
         const nextPrefix = [...prefix, key]
         const envKey = nextPrefix.join('_')
         addPrefixes(value, nextPrefix, envKey)
       })
       return
-    } else if (schema.$json && envKey in env) {
+    } else if ('$json' in schema && envKey in env) {
       const value = parseJSON(schema, env[envKey])
       dset(prefixedEnv, prefix.join('.'), value)
       return
     }
 
-    if (schema.$split && envKey in env) {
+    if ('$split' in schema && envKey in env) {
       let value = env[envKey]
       if (typeof value === 'string') {
-        value = value.split(schema.$split)
+        value = value.split((schema as any).$split)
       }
       dset(prefixedEnv, prefix.join('.'), value)
       return
     }
 
-    if (TypeGuard.IsUnion(schema)) {
+    if (Type.IsUnion(schema)) {
       schema.anyOf.forEach((item) => {
         addPrefixes(item, prefix, envKey)
       })
       return
     }
 
-    if (TypeGuard.IsIntersect(schema)) {
+    if (Type.IsIntersect(schema)) {
       schema.allOf.forEach((item) => {
         addPrefixes(item, prefix, envKey)
       })
@@ -113,10 +113,15 @@ type DeepPartialObject<T> = {
  * Makes all properties in T optional recursively
  * @template T - The type to make partially optional
  */
-export type DeepPartial<T> = T extends Function
+type DeepPartial<T> = T extends Function
   ? T
   : T extends Array<infer InferredArrayMember>
     ? DeepPartialArray<InferredArrayMember>
     : T extends object
       ? DeepPartialObject<T>
       : T | undefined
+
+/**
+ * Converts a TypeBox schema to a type with all properties optional
+ */
+export type OptionalEnv<T extends TSchema> = DeepPartial<Static<T>>

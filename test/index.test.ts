@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { describe, it } from 'node:test'
 
-import { Type } from '@sinclair/typebox'
+import { Type } from 'typebox'
 
 import { JSON, parseEnv, SplitArray } from '../src/index.js'
 
